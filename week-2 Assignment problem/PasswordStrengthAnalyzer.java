@@ -1,0 +1,171 @@
+// <!-- Problem 2: Write a program to create a password strength analyzer and
+// generator using ASCII values and StringBuilder
+// Hint =>
+// a. Take user input for multiple passwords to analyze
+// b. Create a method to analyze password strength using ASCII values:
+// ● i. Count uppercase letters (ASCII 65-90)
+// ● ii. Count lowercase letters (ASCII 97-122)
+// ● iii. Count digits (ASCII 48-57)
+// ● iv. Count special characters (other printable ASCII)
+// ● v. Check for common patterns and sequences
+// c. Create a method to calculate password strength score:
+// ● i. Length points: +2 per character above 8
+// ● ii. Character variety: +10 for each type present
+// ● iii. Deduct points for common patterns (123, abc, qwerty)
+// ● iv. Return strength level: Weak (0-20), Medium (21-50), Strong (51+)
+// d. Create a method using StringBuilder to generate strong passwords:
+// ● i. Take desired length as parameter
+// ● ii. Ensure at least one character from each category
+// ● iii. Fill remaining positions with random characters
+// ● iv. Shuffle the password for better randomness
+// e. Create a method to display analysis results in tabular format:
+
+// 2
+
+// ● i. Password, Length, Uppercase count, Lowercase count, Digits, Special chars, Score,
+// Strength
+// f. The main function analyzes existing passwords and generates new strong passwords based
+// on user requirements -->
+import java.util.*;
+
+public class PasswordStrengthAnalyzer {
+
+    // Analyze password using ASCII values
+    public static int[] analyzePassword(String password) {
+        int upper = 0, lower = 0, digits = 0, special = 0;
+
+        for (int i = 0; i < password.length(); i++) {
+            char ch = password.charAt(i);
+            int ascii = (int) ch;
+
+            if (ascii >= 65 && ascii <= 90)
+                upper++; // Uppercase
+            else if (ascii >= 97 && ascii <= 122)
+                lower++; // Lowercase
+            else if (ascii >= 48 && ascii <= 57)
+                digits++; // Digits
+            else if (ascii >= 33 && ascii <= 126)
+                special++; // Special chars
+        }
+
+        return new int[] { upper, lower, digits, special };
+    }
+
+    // Calculate password strength score
+    public static int calculateScore(String password, int[] counts) {
+        int score = 0;
+
+        // Length points
+        if (password.length() > 8) {
+            score += (password.length() - 8) * 2;
+        }
+
+        // Character variety
+        if (counts[0] > 0)
+            score += 10; // Uppercase
+        if (counts[1] > 0)
+            score += 10; // Lowercase
+        if (counts[2] > 0)
+            score += 10; // Digits
+        if (counts[3] > 0)
+            score += 10; // Special chars
+
+        // Deduct points for common patterns
+        String lowerPass = password.toLowerCase();
+        if (lowerPass.contains("123") || lowerPass.contains("abc") || lowerPass.contains("qwerty")) {
+            score -= 10;
+        }
+
+        return Math.max(score, 0);
+    }
+
+    // Strength level
+    public static String getStrength(int score) {
+        if (score <= 20)
+            return "Weak";
+        else if (score <= 50)
+            return "Medium";
+        else
+            return "Strong";
+    }
+
+    // Generate strong password using StringBuilder
+    public static String generatePassword(int length) {
+        if (length < 4)
+            length = 8; // Minimum recommended length
+
+        Random rand = new Random();
+        String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lower = "abcdefghijklmnopqrstuvwxyz";
+        String digits = "0123456789";
+        String special = "!@#$%^&*()-_=+<>?";
+
+        // Ensure at least one of each
+        StringBuilder sb = new StringBuilder();
+        sb.append(upper.charAt(rand.nextInt(upper.length())));
+        sb.append(lower.charAt(rand.nextInt(lower.length())));
+        sb.append(digits.charAt(rand.nextInt(digits.length())));
+        sb.append(special.charAt(rand.nextInt(special.length())));
+
+        String allChars = upper + lower + digits + special;
+
+        for (int i = 4; i < length; i++) {
+            sb.append(allChars.charAt(rand.nextInt(allChars.length())));
+        }
+
+        // Shuffle for randomness
+        List<Character> chars = new ArrayList<>();
+        for (char c : sb.toString().toCharArray())
+            chars.add(c);
+        Collections.shuffle(chars);
+
+        StringBuilder finalPass = new StringBuilder();
+        for (char c : chars)
+            finalPass.append(c);
+
+        return finalPass.toString();
+    }
+
+    // Display results
+    public static void displayResults(String[] passwords) {
+        System.out.printf("%-15s %-8s %-10s %-10s %-10s %-12s %-8s %-10s\n",
+                "Password", "Length", "Uppercase", "Lowercase", "Digits", "Special Chars", "Score", "Strength");
+        System.out.println(
+                "---------------------------------------------------------------------------------------------");
+
+        for (String password : passwords) {
+            int[] counts = analyzePassword(password);
+            int score = calculateScore(password, counts);
+            String strength = getStrength(score);
+
+            System.out.printf("%-15s %-8d %-10d %-10d %-10d %-12d %-8d %-10s\n",
+                    password, password.length(), counts[0], counts[1], counts[2], counts[3], score, strength);
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Take multiple passwords
+        System.out.println("Enter number of passwords to analyze: ");
+        int n = sc.nextInt();
+        sc.nextLine(); // consume newline
+
+        String[] passwords = new String[n];
+        for (int i = 0; i < n; i++) {
+            System.out.print("Enter password " + (i + 1) + ": ");
+            passwords[i] = sc.nextLine();
+        }
+
+        // Display analysis
+        displayResults(passwords);
+
+        // Generate strong password
+        System.out.print("\nEnter desired length for new strong password: ");
+        int length = sc.nextInt();
+        String newPass = generatePassword(length);
+        System.out.println("Generated Strong Password: " + newPass);
+
+        sc.close();
+    }
+}
